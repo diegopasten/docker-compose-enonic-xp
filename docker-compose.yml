@@ -1,36 +1,45 @@
-apache2:
-  build: apache2
-  hostname: SITE_HOSTNAME
-  restart: always
-  ports:
-    - "80:80"
-    - "443:443"
-    - "8001:8001"
-  log_driver: "json-file"
-  log_opt:
-    max-size: "300M"
-    max-file: "1"
-  links:
-    - exp
-exp:
-  build: exp
-  restart: always
-  ports:
-    - "8080:8080"
-  volumes_from:
-    - "storage"
-  log_driver: "json-file"
-  log_opt:
-    max-size: "300M"
-    max-file: "1"
-  links:
-    - mail
-  labels:
-    io.enonic.backup.prescripts: "/usr/local/bin/backup.sh"
-    io.enonic.backup.data: "/enonic-xp/home/snapshots,/enonic-xp/home/repo"
-storage:
-  build: storage
-mail:
-  image: enoniccloud/postfix
-  hostname: SITE_HOSTNAME
-  restart: always
+version: '2'
+services:
+  apache2:
+    build: apache2
+    hostname: SITE_HOSTNAME
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8001:8001"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "300M"
+        max-file: "1"
+    links:
+      - exp
+  exp:
+    build: exp
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - repo:/enonic-xp/home/repo
+      - work:/enonic-xp/home/work
+      - snapshots:/enonic-xp/home/snapshots
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "300M"
+        max-file: "1"
+    links:
+      - mail
+    labels:
+      io.enonic.backup.prescripts: "/usr/local/bin/backup.sh"
+      io.enonic.backup.data: "/enonic-xp/home/snapshots,/enonic-xp/home/repo"
+  mail:
+    image: enoniccloud/postfix
+    hostname: SITE_HOSTNAME
+    restart: always
+
+volumes:
+  repo: {}
+  work: {}
+  snapshots: {}
